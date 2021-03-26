@@ -42,19 +42,14 @@ namespace Queis
                 return;
             messageText = messageText.Substring(messageText.IndexOf(']') + 1);
 
-            if (messageText.Contains("старт"))
+            if (messageText.Contains("старт") && message.ContainsKey("from_id") && message["from_id"].ToString() == "194465804")
                 messageText = StartQueue(messageText);
-            else if (messageText.Contains("стоп"))
+            else if (messageText.Contains("стоп") && message.ContainsKey("from_id") && message["from_id"].ToString() == "194465804")
                 messageText = StopQueue(messageText);
             else if (messageText.Contains("запись"))
-            {
-                if (!message.ContainsKey("from_id"))
-                    return;
-                long userId = 0;
-                if (!long.TryParse(message["from_id"].ToString(), out userId))
-                    return;
-                messageText = AddQueue(messageText, userId);
-            }
+                messageText = AddQueue(messageText, (message.ContainsKey("from_id")) ? message["from_id"].ToString()  : "");
+            else if (messageText.Contains("отписаться"))
+                messageText = RemoveQueue(messageText, (message.ContainsKey("from_id")) ? message["from_id"].ToString()  : "");
             else if (messageText.Contains("очередь"))
                 messageText = StatusQueue(messageText);
             else
@@ -84,7 +79,9 @@ namespace Queis
         private string StartQueue(string message)
         {
             message = CheckQueue(message, "старт");
-
+            if (message.Length < 2)
+                return "Не могу создать";
+            
             queues.Add(message, new Queue(message));
 
             return $"Создал очередь на {message}";
@@ -101,11 +98,32 @@ namespace Queis
             return $"Остановил очередь {message}";
         }
         
-        private string AddQueue(string message, long id)
+        private string AddQueue(string message, string id)
         {
             message = CheckQueue(message, "запись");
+            if (!queues.ContainsKey(message))
+                return "Такой очереди нет";
             
-            queues[message].Add(id);
+            long userId = 0;
+            if (!long.TryParse(id, out userId))
+                return "У тебя какой-то странный idшник";
+
+            queues[message].Add(userId);
+
+            return $"Записал на {message}";
+        }
+
+        private string RemoveQueue(string message, string id)
+        {
+            message = CheckQueue(message, "отписаться");
+            if (!queues.ContainsKey(message))
+                return "Такой очереди нет";
+            
+            long userId = 0;
+            if (!long.TryParse(id, out userId))
+                return "У тебя какой-то странный idшник";
+
+            queues[message].Remove(userId);
 
             return $"Записал на {message}";
         }
