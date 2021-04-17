@@ -20,11 +20,10 @@ namespace Queis
                 return;
             
             Dictionary<string, object> message = JsonSerializer.Deserialize<Dictionary<string, object>>(messageObject["message"].ToString());
+            Message msg = new Message(message);
+            
+            AnswerHandler ah = new AnswerHandler(msg);
 
-            if (!message.ContainsKey("text"))
-                return;
-            if (!message.ContainsKey("peer_id"))
-                return;
             string messageText = message["text"].ToString();
             if (!messageText.StartsWith("[club203355401|"))
                 return;
@@ -43,7 +42,8 @@ namespace Queis
             else
                 messageText = "Чего хотел?";
 
-            _vkApi.Send(long.Parse(message["peer_id"].ToString()), messageText);
+            if (ah.needAnswer)
+                _vkApi.Send(ah.answer);
         }
 
         private string CheckQueue(string message, string command)

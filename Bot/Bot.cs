@@ -1,5 +1,4 @@
 using VkNet;
-using VkNet.Abstractions;
 using VkNet.Model;
 using System.Collections.Generic;
 using VkNet.Model.RequestParams;
@@ -16,15 +15,16 @@ namespace Queis
                 api.Authorize(new ApiAuthParams { AccessToken = access });
         }
 
-        public void Send(long peer, string message)
+        public void Send(Message message)
         {
-            api.Messages.Send(new MessagesSendParams
-            {
-                RandomId = new System.DateTime().Millisecond,
-                PeerId = peer,
-                Message = message
-            });
+            MessagesSendParams msp = new MessagesSendParams();
+            msp.RandomId = System.DateTime.Now.Millisecond;
+            msp.PeerId = message.peer_id;
+            msp.Message = message.text;
+            api.Messages.Send(msp);
         }
+
+        public long GetClubId() => (long)bot_.api.UserId;
 
         public List<User> GetUser(List<long> ids)
         {
