@@ -1,27 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using VkNet.Abstractions;
-using VkNet.Model.RequestParams;
 
 namespace Queis
 {
     class messageObjectHandlers
     {
 
-        private IVkApi _vkApi;
+        private Bot _vkApi;
         static private Dictionary<string, Queue> queues;
-
-        private void SendMessage(long peer, string message)
-        {
-            _vkApi.Messages.Send(new MessagesSendParams
-            {
-                RandomId = new DateTime().Millisecond,
-                PeerId = peer,
-                Message = message
-            });
-        }
-        public messageObjectHandlers(IVkApi _vkApi, string Object)
+        public messageObjectHandlers(Bot _vkApi, string Object)
         {
             this._vkApi = _vkApi;
             Dictionary<string, object> messageObject = JsonSerializer.Deserialize<Dictionary<string, object>>(Object);
@@ -55,7 +43,7 @@ namespace Queis
             else
                 messageText = "Чего хотел?";
 
-            SendMessage(long.Parse(message["peer_id"].ToString()), messageText);
+            _vkApi.Send(long.Parse(message["peer_id"].ToString()), messageText);
         }
 
         private string CheckQueue(string message, string command)
@@ -135,11 +123,11 @@ namespace Queis
             if (!queues.ContainsKey(message))
                 return "Не нашёл такую очередь";
             
-            var ids =   _vkApi.Users.Get(queues[message].GetQueue());
+            var users =   _vkApi.GetUser(queues[message].GetQueue());
 
             string result = $"Очередь {queues[message].name}:\n";
-            foreach (var id in ids)
-                result += $"{id.LastName} {id.FirstName[0]}.\n";
+            foreach (var id in users)
+                result += $"{id.Surname} {id.Name[0]}.\n";
 
             return result;
         }
